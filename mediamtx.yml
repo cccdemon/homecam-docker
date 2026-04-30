@@ -9,8 +9,8 @@ logDestinations:
 logFile: /var/log/mediamtx/streaming.log
 
 # Authentication
-# Streams stay open on the LAN. API access is limited to the Docker bridge so
-# only the local nginx web UI can toggle the camera without a browser login.
+# This runs in a closed local network. Streams and the MediaMTX API are open
+# so the web UI can toggle the camera without a browser login.
 authInternalUsers:
   - user: any
     pass:
@@ -22,12 +22,8 @@ authInternalUsers:
         path:
       - action: playback
         path:
-  - user: any
-    pass:
-    ips:
-      - 172.28.0.0/16
-    permissions:
       - action: api
+      - action: metrics
 
 # API
 api: true
