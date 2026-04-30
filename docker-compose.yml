@@ -1,6 +1,6 @@
 services:
   mediamtx:
-    image: bluenviron/mediamtx:${MEDIAMTX_VERSION:-1-ffmpeg}
+    image: bluenviron/mediamtx:${MEDIAMTX_VERSION:-1}-ffmpeg
     container_name: mediamtx-webcam
     restart: ${RESTART_POLICY:-unless-stopped}
     ports:
