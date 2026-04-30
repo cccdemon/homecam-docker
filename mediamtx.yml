@@ -8,11 +8,26 @@ logDestinations:
   - file
 logFile: /var/log/mediamtx/streaming.log
 
-# Authentication (optional)
-# authentication:
-#   users:
-#     - user: admin
-#       pass: changeme123
+# Authentication
+# Streams stay open on the LAN. API access is limited to the Docker bridge so
+# only the local nginx web UI can toggle the camera without a browser login.
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+        path:
+      - action: read
+        path:
+      - action: playback
+        path:
+  - user: any
+    pass:
+    ips:
+      - 172.28.0.0/16
+    permissions:
+      - action: api
 
 # API
 api: true
