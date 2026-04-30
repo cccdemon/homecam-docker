@@ -204,7 +204,7 @@ cat /proc/mounts | grep video
 #### No Stream Visible
 ```bash
 # Check MediaMTX status
-docker-compose exec mediamtx curl -s http://localhost:8888/api/v1/paths/list
+docker-compose exec mediamtx curl -s http://localhost:8888/v3/paths/list
 
 # Check web console
 docker-compose logs mediamtx | grep -i error

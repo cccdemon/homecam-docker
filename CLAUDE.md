@@ -29,8 +29,8 @@ USB webcam → Proxmox host → LXC (cgroup + mount passthrough) → /dev/video0
 
 Key consequences:
 
-- **The camera capture is an `ffmpeg` subprocess defined inside [mediamtx.yml](mediamtx.yml)** under `paths.webcam.sourceCmdArgs`, *not* a separate service. Format/resolution/fps changes go there, not in `.env` (the `CAMERA_*` env vars in [.env.example](.env.example) are documentation — nothing currently substitutes them into `mediamtx.yml`).
-- **The browser never talks to MediaMTX directly for the UI.** Nginx ([nginx.conf](nginx.conf)) proxies `/api/v1/`, `/webrtc/connection`, and `/hls/` to the `mediamtx` service over the `streaming` Docker bridge network. The WebRTC media itself still flows directly on port 8555 (UDP+TCP).
+- **The camera capture is an `ffmpeg` subprocess defined inside [mediamtx.yml](mediamtx.yml)** under `paths.webcam.runOnInit`, *not* a separate service. Format/resolution/fps changes go there, not in `.env` (the `CAMERA_*` env vars in [.env.example](.env.example) are documentation — nothing currently substitutes them into `mediamtx.yml`).
+- **The browser never talks to MediaMTX directly for the UI.** Nginx ([nginx.conf](nginx.conf)) proxies `/v3/`, `/webcam/whep`, and `/webcam/index.m3u8` to the `mediamtx` service over the `streaming` Docker bridge network. The WebRTC media itself still flows directly on port 8555 (UDP+TCP).
 - **USB pass-through is a host-side concern.** `pct set` on the Proxmox host (see README.md "Step 3") is what makes `/dev/video0` exist inside the LXC. [docker-compose.yml](docker-compose.yml) then bind-mounts `/dev/video0` into the mediamtx container. If the device isn't in the LXC, no amount of compose tweaking helps.
 - **Hardcoded for Logitech C920.** [setup.sh](setup.sh) checks USB ID `046d:082d`, [mediamtx.yml](mediamtx.yml) assumes MJPEG@1280x720@30fps, label says "C920". Adapting to another camera means editing all three.
 
@@ -56,7 +56,7 @@ Direct equivalents when Make isn't available (fresh container):
 docker-compose up -d
 docker-compose logs -f mediamtx
 docker-compose exec mediamtx /bin/sh
-curl -s http://localhost:8888/api/v1/paths/list   # confirm 'webcam' path is ready
+curl -s http://localhost:8888/v3/paths/list   # confirm 'webcam' path is ready
 ```
 
 There are no tests, linters, or build steps — this is a configuration repo, not an application.
@@ -66,22 +66,15 @@ There are no tests, linters, or build steps — this is a configuration repo, no
 - **LXC container ID: 104** on the Proxmox host. SSH host: `proxmox.raumdock.org`. Public stream domain: `stream.raumdock.org` (resolves to a local IP; the Nginx web-ui container on port 80 serves it).
 - **`.env` is checked in alongside `.env.example`.** Confirm nothing sensitive landed in [.env](.env) before committing or transferring. Current `.env` contains no secrets.
 
-## Open risk: MediaMTX `source: ffmpeg` may not be a real config
+## MediaMTX webcam publishing
 
-Mainline MediaMTX ([bluenviron/mediamtx](https://github.com/bluenviron/mediamtx)) doesn't document a `source: ffmpeg` + `sourceCmdArgs` mechanism — the standard pattern for V4L2 capture is `runOnInit` (or `runOnDemand`) with an ffmpeg command that publishes RTSP back to MediaMTX. The current [mediamtx.yml](mediamtx.yml) `paths.webcam` block uses the non-standard pattern. If the stream doesn't appear after `docker-compose up -d`, replace the `source` / `sourceCmdArgs` keys with:
+Mainline MediaMTX ([bluenviron/mediamtx](https://github.com/bluenviron/mediamtx)) uses `runOnInit` (or `runOnDemand`) for external commands such as FFmpeg. The service must use an `-ffmpeg` image variant because the hook runs inside the MediaMTX container.
 
-```yaml
-paths:
-  webcam:
-    runOnInit: ffmpeg -hide_banner -loglevel error -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i /dev/video0 -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp -rtsp_transport tcp rtsp://localhost:8322/webcam
-    runOnInitRestart: yes
-```
-
-(WebRTC needs H.264/VP8/VP9, so `-c:v copy` from MJPEG won't work — transcoding is mandatory unless the C920 is set to `-input_format h264`.)
+WebRTC needs H.264/VP8/VP9, so MJPEG input is transcoded to H.264 baseline unless the camera is changed to emit a browser-compatible codec directly.
 
 ## When editing
 
-- Camera/stream parameters: edit [mediamtx.yml](mediamtx.yml) `paths.webcam.sourceCmdArgs`, not `.env`.
+- Camera/stream parameters: edit [mediamtx.yml](mediamtx.yml) `paths.webcam.runOnInit`, not `.env`.
 - Port mappings: [docker-compose.yml](docker-compose.yml) reads `${WEBRTC_PORT}` etc. from `.env`, but MediaMTX's *internal* listen ports are hardcoded in `mediamtx.yml` — change both sides if remapping.
 - Browser UI: [web/index.html](web/index.html) + [web/stream.js](web/stream.js) are mounted read-only into nginx; just edit and `docker-compose restart web-ui` (no rebuild needed).
 - Adding a second camera: there's a commented `webcam2` template at the bottom of [mediamtx.yml](mediamtx.yml). Also requires a second `pct set ... lxc.mount.entry` on the Proxmox host and a second `/dev/videoN` bind in compose.

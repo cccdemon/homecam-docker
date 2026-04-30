@@ -43,7 +43,7 @@ services:
     networks:
       - streaming
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/api/v1/config/get"]
+      test: ["CMD", "curl", "-f", "http://localhost:8888/v3/config/global/get"]
       interval: 30s
       timeout: 10s
       retries: 3

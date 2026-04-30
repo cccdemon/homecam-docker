@@ -69,7 +69,7 @@ docker-compose ps
 docker-compose logs -f mediamtx
 
 # Test API
-curl http://localhost:8888/api/v1/config/get
+curl http://localhost:8888/v3/config/global/get
 
 # Access web UI
 # Open browser: http://stream.raumdock.org
@@ -127,10 +127,10 @@ webcam-webui        "nginx -g daemon off…"   web-ui       Up X seconds (health
 ### 2. Verify Services
 ```bash
 # Check MediaMTX API
-curl -s http://localhost:8888/api/v1/config/get | head -20
+curl -s http://localhost:8888/v3/config/global/get | head -20
 
 # Check available streams
-curl -s http://localhost:8888/api/v1/paths/list
+curl -s http://localhost:8888/v3/paths/list
 
 # Check web server
 curl -s http://localhost/health
@@ -211,7 +211,7 @@ After deployment, verify these items:
 
 - [ ] All containers running (`docker-compose ps` shows green)
 - [ ] Web UI accessible (`http://stream.raumdock.org`)
-- [ ] MediaMTX API responding (`curl http://localhost:8888/api/v1/config/get`)
+- [ ] MediaMTX API responding (`curl http://localhost:8888/v3/config/global/get`)
 - [ ] Camera detected by MediaMTX logs
 - [ ] Webcam stream visible in browser
 - [ ] Can connect/disconnect without errors
