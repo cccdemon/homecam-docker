@@ -1,0 +1,60 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime files
+recordings/
+*.mp4
+*.h264
+*.m3u8
+*.ts
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node modules (if using any frontend build)
+node_modules/
+dist/
+build/
+
+# Temp files
+*.tmp
+*.swp
+*.swo
+*~
+.#*
+.*.sw[op]
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Certificates
+*.crt
+*.key
+*.pem
+*.der
+
+# Test files
+test-output/
+coverage/

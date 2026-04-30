@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(plink -ssh -pw 'ihjenpw124!' root@proxmox.raumdock.org 'echo \"=== HOST ===\"; hostname; pveversion 2>&1 | head -1; echo \"=== CT 104 ===\"; pct status 104 2>&1; pct config 104 2>&1 | grep -iE \"memory|cores|hostname|net|lxc|video|usb\" | head -20; echo \"=== INSIDE CT 104 ===\"; pct exec 104 -- bash -c \"hostname; echo --video--; ls -la /dev/video* 2>&1 | head; echo --docker--; which docker docker-compose 2>&1; echo --files--; ls -la /root 2>&1; echo --net--; ip -4 -o addr show | grep -v 127.0.0.1\" 2>&1')",
+      "Bash(plink -ssh -pw 'ihjenpw124!' root@proxmox.raumdock.org 'echo OK; hostname')",
+      "Bash(tasklist)",
+      "Bash(taskkill //F //IM plink.exe)",
+      "Bash(nslookup proxmox.raumdock.org)",
+      "Bash(ping -n 2 proxmox.raumdock.org)",
+      "Bash(nslookup stream.raumdock.org)",
+      "Bash(ssh -o ConnectTimeout=3 -o StrictHostKeyChecking=no -o BatchMode=yes root@stream.raumdock.org exit)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(ssh -o ConnectTimeout=3 -o StrictHostKeyChecking=no -o BatchMode=yes root@proxmox.raumdock.org exit)",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:lql69HSCwQZYqf2zNlsPeSM0yL869zruTYw4gW2Sju0' -pw 'ihjenpw124!' root@stream.raumdock.org 'echo OK; hostname; whoami')",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:A+Z3BZGiWj0hqNV9ToCcCzILD04jwQkGftuQrNOoMfY' -pw 'ihjenpw124!' root@proxmox.raumdock.org 'echo OK; hostname; pveversion -v 2>&1 | head -1; pct status 104')",
+      "Bash(ssh-keyscan -t ed25519 192.168.178.200)",
+      "Bash(tee /tmp/host_hostkey)",
+      "Bash(ssh-keygen -lf -)",
+      "Bash(ssh-keyscan -t ed25519 192.168.178.128)",
+      "Bash(tee /tmp/lxc_hostkey)",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' root@192.168.178.200 'echo OK; hostname; pveversion 2>&1 | head -1; pct status 104; pct config 104 2>&1 | grep -iE \"^\\(memory|cores|hostname|net|features\\)|usb|video|cgroup|mount\" | head -30')",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:lql69HSCwQZYqf2zNlsPeSM0yL869zruTYw4gW2Sju0' -pw 'ihjenpw124!' root@192.168.178.128 'set -e; echo OK; hostname; echo --video--; ls -la /dev/video* 2>&1 | head; echo --usb--; lsusb 2>&1 | head; echo --docker--; which docker docker-compose 2>&1; docker --version 2>&1; docker-compose --version 2>&1; echo --files--; ls -la /root 2>&1; echo --mem--; free -h 2>&1 | head -2; echo --net--; ip -4 -o addr show | grep -v 127.0.0.1')",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' root@192.168.178.200 'echo --modules--; lsmod | grep -E \"uvcvideo|videodev\" || echo \"uvcvideo NOT loaded\"; echo --host video devices--; ls -la /dev/video* 2>&1; echo --tarball check--; which tar gzip 2>&1')",
+      "Bash(plink -ssh -batch -hostkey SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0 -pw ihjenpw124! root@192.168.178.200 'set -e; chmod 666 /dev/video0 /dev/video1; ls -la /dev/video0 /dev/video1; echo \"=== inside CT after chmod ===\"; pct exec 104 -- ls -la /dev/video0 /dev/video1; echo \"=== persistent udev rule ===\"; UDEV=/etc/udev/rules.d/99-webcam-perms.rules; grep -q \"video4linux\" $UDEV 2>/dev/null || { echo \"SUBSYSTEM==\\\\\"video4linux\\\\\", MODE=\\\\\"0666\\\\\"\" > $UDEV; udevadm control --reload-rules; echo \"udev rule installed\"; }; cat $UDEV')",
+      "Bash(tar --exclude='./logs' --exclude='./recordings' --exclude='./.vscode' --exclude='./.git' -czf /tmp/server-tech.tgz .)",
+      "Read(//tmp/**)",
+      "Bash(tar -tzf /tmp/server-tech.tgz)",
+      "Bash(pscp -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' /tmp/server-tech.tgz root@192.168.178.200:/tmp/server-tech.tgz)",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' root@192.168.178.200 'set -e; ls -la /tmp/server-tech.tgz; cat /tmp/server-tech.tgz | pct exec 104 -- bash -c \"mkdir -p /root/webcam-stream && tar -C /root/webcam-stream -xzf - && ls -la /root/webcam-stream\"')",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' root@192.168.178.200 'set -e; cat /tmp/server-tech.tgz | pct exec 104 -- bash -c \"rm -rf /root/webcam-stream && mkdir -p /root/webcam-stream && tar -C /root/webcam-stream --no-same-owner -xzf - && chown -R root:root /root/webcam-stream && chmod +x /root/webcam-stream/setup.sh && echo --listing-- && ls -la /root/webcam-stream\"')",
+      "Bash(plink -ssh -batch -hostkey SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0 -pw ihjenpw124! root@192.168.178.200 'set -e; CONF=/etc/pve/lxc/104.conf; if grep -q \"^features:\" $CONF; then echo \"features line already present:\"; grep \"^features:\" $CONF; else echo \"features: nesting=1,keyctl=1\" >> $CONF; echo \"added features line\"; fi; echo \"=== conf ===\"; cat $CONF; echo \"=== reboot ===\"; pct reboot 104; sleep 15; pct status 104; echo \"=== verify devices still present ===\"; pct exec 104 -- ls -la /dev/video0 /dev/video1')",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' root@192.168.178.200 'pct exec 104 -- bash -c \"set -e; export DEBIAN_FRONTEND=noninteractive; apt-get update -qq && apt-get install -y -qq curl ca-certificates v4l-utils ffmpeg 2>&1 | tail -5; echo --get.docker--; curl -fsSL https://get.docker.com -o /tmp/get-docker.sh && sh /tmp/get-docker.sh 2>&1 | tail -10; echo --compose--; curl -SL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose 2>&1 | tail -3; chmod +x /usr/local/bin/docker-compose; echo --versions--; docker --version; docker-compose --version; df -h / | tail -1\"')",
+      "Bash(plink -ssh -batch -hostkey SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0 -pw ihjenpw124! root@192.168.178.200 'pct exec 104 -- bash -c \"ls -la /usr/local/bin/docker-compose 2>&1; file /usr/local/bin/docker-compose 2>&1; echo PATH=\\\\$PATH; /usr/local/bin/docker-compose --version 2>&1; head -c 200 /usr/local/bin/docker-compose 2>&1 | od -c | head -3\"')",
+      "Bash(plink -ssh -batch -hostkey 'SHA256:RX8Wr/9vjmoOujH+Ny8FngWBFmPRNL7uWATdIGPZrQ0' -pw 'ihjenpw124!' root@192.168.178.200 'pct exec 104 -- bash -c \"set -e; ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose; docker-compose --version; echo --docker daemon--; systemctl is-active docker; docker info 2>&1 | head -10; echo --bringing up the stack--; cd /root/webcam-stream && docker-compose up -d 2>&1 | tail -40; echo --containers--; docker-compose ps\"')"
+    ]
+  }
+}

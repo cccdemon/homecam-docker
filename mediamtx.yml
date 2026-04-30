@@ -1,0 +1,97 @@
+# MediaMTX Configuration
+# Reference: https://github.com/bluenviron/mediamtx
+
+# Global settings
+logLevel: info
+logDestinations:
+  - stdout
+  - file
+logFile: /var/log/mediamtx/streaming.log
+
+# Authentication (optional)
+# authentication:
+#   users:
+#     - user: admin
+#       pass: changeme123
+
+# API
+api: yes
+apiAddress: :8888
+apiEncryption: no
+
+# Metrics (optional)
+metrics: yes
+metricsAddress: :9998
+
+# RTMP server (for ingest/push)
+rtmp: yes
+rtmpAddress: :1935
+rtmpEncryption: no
+
+# RTSP server
+rtsp: yes
+rtspAddress: :8322
+rtspEncryption: no
+
+# HLS server (HTTP Live Streaming fallback)
+hls: yes
+hlsAddress: :8889
+hlsEncryption: no
+hlsVariant: fmp4
+hlsSegmentCount: 3
+hlsSegmentDuration: 2s
+hlsPartDuration: 500ms
+hlsDiscontinuityDuration: 10s
+
+# WebRTC (low-latency peer-to-peer)
+webrtc: yes
+webrtcAddress: :8555
+webrtcEncryption: no
+webrtcLocalUDPAddress: :8555
+webrtcLocalTCPAddress: :8555
+
+# Performance tuning
+readBufferCount: 256
+readTimeout: 10s
+writeQueueSize: 256
+writeTimeout: 10s
+udpMaxPayloadSize: 1472
+externalAuthenticationURL: ""
+pathMaxReaders: 10
+
+# Stream paths configuration
+paths:
+  # Primary USB camera stream via V4L2
+  webcam:
+    # Publish the USB camera into this path when MediaMTX starts.
+    # Browser WebRTC requires H.264/VP8/VP9, so MJPEG input is transcoded.
+    runOnInit: ffmpeg -hide_banner -loglevel error -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i /dev/video0 -an -c:v libx264 -pix_fmt yuv420p -preset ultrafast -tune zerolatency -profile:v baseline -g 30 -bf 0 -f rtsp -rtsp_transport tcp rtsp://localhost:8322/webcam
+    runOnInitRestart: yes
+    maxReaders: 10
+
+# Additional paths can be added here for multiple cameras
+# Example for a second camera:
+#   webcam2:
+#     source: ffmpeg
+#     sourceCmdArgs:
+#       - -f
+#       - v4l2
+#       - -input_format
+#       - mjpeg
+#       - -video_size
+#       - 1280x720
+#       - -framerate
+#       - 30
+#       - -i
+#       - /dev/video1
+#       - -c:v
+#       - copy
+#       - -f
+#       - rtsp
+#       - -rtsp_transport
+#       - tcp
+#       - rtsp://localhost:8322/webcam2
+#     protocols:
+#       - webrtc
+#       - rtsp
+#       - hls
