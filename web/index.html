@@ -224,6 +224,12 @@
             background: rgba(240, 165, 0, 0.04);
         }
 
+        .health-svc.error {
+            color: var(--red);
+            border-color: rgba(255, 68, 68, 0.28);
+            background: rgba(255, 68, 68, 0.04);
+        }
+
         .stream-main {
             padding: 18px 22px;
             display: grid;
@@ -397,6 +403,15 @@
             background: rgba(255, 68, 68, 0.1);
         }
 
+        .btn-green {
+            color: var(--green);
+            border-color: rgba(0, 255, 136, 0.38);
+        }
+
+        .btn-green:hover {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
         .btn-gold {
             color: var(--gold);
             border-color: rgba(240, 165, 0, 0.38);
@@ -470,6 +485,12 @@
             font-size: 10px;
             padding: 7px 8px;
             overflow-wrap: anywhere;
+        }
+
+        .control-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .copy-btn {
@@ -615,6 +636,7 @@
         <div class="health-bar">
             <div class="health-svc ok"><span class="health-dot"></span>MEDIAMTX</div>
             <div class="health-svc ok"><span class="health-dot"></span>WEBRTC</div>
+            <div id="cameraPowerBadge" class="health-svc loading"><span class="health-dot"></span>CAMERA CHECK</div>
             <div class="health-svc warn"><span class="health-dot"></span>FULLHD</div>
             <div class="health-svc loading"><span class="health-dot"></span>HLS READY</div>
         </div>
@@ -648,6 +670,19 @@
             <aside class="side-panel">
                 <section class="info-panel panel">
                     <div class="panel-head">
+                        <div class="panel-title">CAMERA POWER</div>
+                        <div id="cameraPowerState" class="badge off">CHECKING</div>
+                    </div>
+                    <div class="info-body">
+                        <div class="control-actions">
+                            <button id="cameraOnBtn" class="btn btn-green" onclick="handleCameraOn()">Camera On</button>
+                            <button id="cameraOffBtn" class="btn btn-red" onclick="handleCameraOff()">Camera Off</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-panel panel">
+                    <div class="panel-head">
                         <div class="panel-title">STREAM TELEMETRY</div>
                         <div class="badge on">ONLINE</div>
                     </div>
@@ -655,6 +690,10 @@
                         <div class="info-item">
                             <span class="info-label">Stream Status</span>
                             <span class="info-value" id="infoStatus">Disconnected</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Camera Power</span>
+                            <span class="info-value" id="infoCameraPower">Checking</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Connection</span>
@@ -699,6 +738,6 @@
         </footer>
     </div>
 
-    <script src="stream.js?v=20260430-2"></script>
+    <script src="stream.js?v=20260430-3"></script>
 </body>
 </html>

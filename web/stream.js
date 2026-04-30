@@ -1,6 +1,9 @@
 // WebRTC Stream Handler
 // Connects to MediaMTX WebRTC server and displays live video feed
 
+const CAMERA_PATH = 'webcam';
+const CAMERA_RUN_ON_INIT = 'ffmpeg -hide_banner -loglevel error -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 30 -i /dev/video0 -an -c:v libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency -profile:v high -crf 17 -maxrate 25M -bufsize 25M -g 30 -bf 0 -f rtsp -rtsp_transport tcp rtsp://localhost:8322/webcam';
+
 class WebRTCStream {
     constructor() {
         this.pc = null;
@@ -347,9 +350,135 @@ function copyHlsUrl() {
     });
 }
 
+function setCameraControlsDisabled(disabled) {
+    const onBtn = document.getElementById('cameraOnBtn');
+    const offBtn = document.getElementById('cameraOffBtn');
+
+    if (onBtn) onBtn.disabled = disabled;
+    if (offBtn) offBtn.disabled = disabled;
+}
+
+function updateCameraPowerState(state, message) {
+    const stateEl = document.getElementById('cameraPowerState');
+    const badgeEl = document.getElementById('cameraPowerBadge');
+    const infoEl = document.getElementById('infoCameraPower');
+
+    if (stateEl) {
+        stateEl.className = state === 'on' ? 'badge on' : 'badge off';
+        stateEl.textContent = message;
+    }
+
+    if (badgeEl) {
+        const className = state === 'on' ? 'health-svc ok' : state === 'off' ? 'health-svc error' : 'health-svc loading';
+        badgeEl.className = className;
+        badgeEl.innerHTML = `<span class="health-dot"></span>CAMERA ${message}`;
+    }
+
+    if (infoEl) {
+        infoEl.textContent = message.charAt(0).toUpperCase() + message.slice(1).toLowerCase();
+    }
+}
+
+async function patchCameraPath(body) {
+    let response = await fetch(`/v3/config/paths/patch/${CAMERA_PATH}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    });
+
+    if (response.status === 404 || response.status === 405) {
+        response = await fetch(`/v3/config/paths/edit/${CAMERA_PATH}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+    }
+
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`MediaMTX API ${response.status}: ${text || response.statusText}`);
+    }
+}
+
+async function refreshCameraPowerState() {
+    try {
+        const response = await fetch(`/v3/config/paths/get/${CAMERA_PATH}`, {
+            cache: 'no-store',
+        });
+
+        if (!response.ok) {
+            throw new Error(`MediaMTX API ${response.status}`);
+        }
+
+        const config = await response.json();
+        updateCameraPowerState(config.runOnInit ? 'on' : 'off', config.runOnInit ? 'ON' : 'OFF');
+    } catch (error) {
+        console.error('Camera state check failed:', error);
+        updateCameraPowerState('unknown', 'UNKNOWN');
+    }
+}
+
+async function handleCameraOn() {
+    setCameraControlsDisabled(true);
+    updateCameraPowerState('unknown', 'STARTING');
+
+    try {
+        await patchCameraPath({
+            runOnInit: CAMERA_RUN_ON_INIT,
+            runOnInitRestart: true,
+        });
+        updateCameraPowerState('on', 'ON');
+        clearControlError();
+    } catch (error) {
+        console.error('Camera on failed:', error);
+        showControlError(`Camera on failed: ${error.message}`);
+        await refreshCameraPowerState();
+    } finally {
+        setCameraControlsDisabled(false);
+    }
+}
+
+async function handleCameraOff() {
+    setCameraControlsDisabled(true);
+    updateCameraPowerState('unknown', 'STOPPING');
+
+    if (streamInstance) {
+        streamInstance.disconnect();
+    }
+
+    try {
+        await patchCameraPath({
+            runOnInit: '',
+            runOnInitRestart: false,
+        });
+        updateCameraPowerState('off', 'OFF');
+        clearControlError();
+    } catch (error) {
+        console.error('Camera off failed:', error);
+        showControlError(`Camera off failed: ${error.message}`);
+        await refreshCameraPowerState();
+    } finally {
+        setCameraControlsDisabled(false);
+    }
+}
+
+function showControlError(message) {
+    const container = document.getElementById('errorContainer');
+    container.innerHTML = `<div class="error-message">${message}</div>`;
+}
+
+function clearControlError() {
+    document.getElementById('errorContainer').innerHTML = '';
+}
+
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
     console.log('Page loaded. Ready to connect to WebRTC stream.');
+    refreshCameraPowerState();
 });
 
 // Auto-connect on page load (optional)
