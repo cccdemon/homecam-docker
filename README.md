@@ -276,6 +276,7 @@ rtmp://stream.raumdock.org:1935/live
 sudo ufw allow 80/tcp
 sudo ufw allow 22/tcp
 sudo ufw allow 8555/tcp
+sudo ufw allow 8555/udp
 sudo ufw allow 8888/tcp
 sudo ufw deny from any to any port 1935
 ```

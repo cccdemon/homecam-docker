@@ -269,6 +269,7 @@ docker system prune -f
    ```bash
    ufw allow 80/tcp
    ufw allow 22/tcp
+   ufw allow 8555/udp
    ufw deny 1935/tcp  # RTMP access restricted
    ```
 

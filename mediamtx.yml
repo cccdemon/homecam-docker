@@ -48,6 +48,8 @@ webrtcAddress: :8555
 webrtcEncryption: false
 webrtcLocalUDPAddress: :8555
 webrtcLocalTCPAddress: ""
+webrtcAdditionalHosts:
+  - stream.raumdock.org
 
 # Performance tuning
 readTimeout: 10s
