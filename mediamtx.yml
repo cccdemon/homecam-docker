@@ -41,7 +41,6 @@ hlsVariant: fmp4
 hlsSegmentCount: 3
 hlsSegmentDuration: 2s
 hlsPartDuration: 500ms
-hlsDiscontinuityDuration: 10s
 
 # WebRTC (low-latency peer-to-peer)
 webrtc: yes
@@ -57,7 +56,6 @@ writeQueueSize: 256
 writeTimeout: 10s
 udpMaxPayloadSize: 1472
 externalAuthenticationURL: ""
-pathMaxReaders: 10
 
 # Stream paths configuration
 paths:
