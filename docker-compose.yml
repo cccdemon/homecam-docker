@@ -34,11 +34,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${CPUS_LIMIT:-2}'
-          memory: ${MEMORY_LIMIT:-512m}
+          cpus: '${CPUS_LIMIT:-4}'
+          memory: ${MEMORY_LIMIT:-1024m}
         reservations:
-          cpus: '1'
-          memory: 256m
+          cpus: '2'
+          memory: 512m
     networks:
       - streaming
     healthcheck:

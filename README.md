@@ -86,8 +86,8 @@ CAMERA_FORMAT=MJPEG                # Input format (MJPEG or YUYV)
 ### Resource Limits
 Configured in docker-compose.yml and .env:
 ```bash
-MEMORY_LIMIT=512m    # Adjust for your LXC limits
-CPUS_LIMIT=2         # CPU cores allocated
+MEMORY_LIMIT=1024m   # Adjust for your LXC limits
+CPUS_LIMIT=4         # CPU cores allocated
 ```
 
 ---
@@ -300,7 +300,7 @@ For secure remote access:
 | Bitrate | 20000 kbps | ~20 Mbps cap for high-quality LAN streaming |
 | Latency | <1s (WebRTC) | Peer-to-peer advantage |
 | Memory Usage | ~150-300MB | Depends on bitrate & connections |
-| CPU Usage | Low (5-15%) | Go-based MediaMTX is efficient |
+| CPU Usage | Moderate | x264 medium preset uses CPU for cleaner 1080p |
 
 ---
 
