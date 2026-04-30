@@ -297,7 +297,7 @@ For secure remote access:
 | Codec | H.264 | Efficient, widely supported |
 | Resolution | 1920×1080 | Full HD |
 | Frame Rate | 30 fps | Smooth motion |
-| Bitrate | 2500 kbps | ~2.5 Mbps (adjustable) |
+| Bitrate | 8000 kbps | ~8 Mbps cap for clearer 1080p |
 | Latency | <1s (WebRTC) | Peer-to-peer advantage |
 | Memory Usage | ~150-300MB | Depends on bitrate & connections |
 | CPU Usage | Low (5-15%) | Go-based MediaMTX is efficient |
