@@ -297,7 +297,7 @@ For secure remote access:
 | Codec | H.264 | Efficient, widely supported |
 | Resolution | 1920×1080 | Full HD |
 | Frame Rate | 30 fps | Smooth motion |
-| Bitrate | 20000 kbps | ~20 Mbps cap for high-quality LAN streaming |
+| Bitrate | 30000 kbps | ~30 Mbps cap with light denoise for LAN streaming |
 | Latency | <1s (WebRTC) | Peer-to-peer advantage |
 | Memory Usage | ~150-300MB | Depends on bitrate & connections |
 | CPU Usage | Moderate | x264 medium preset uses CPU for cleaner 1080p |
