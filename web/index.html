@@ -355,15 +355,6 @@
             50% { opacity: 0.35; }
         }
 
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            padding: 10px;
-            border-top: 1px solid var(--border);
-            background: rgba(4, 6, 10, 0.55);
-        }
-
         .btn {
             font-family: 'Share Tech Mono', monospace;
             font-size: 10px;
@@ -493,6 +484,12 @@
             gap: 8px;
         }
 
+        .viewer-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
         .copy-btn {
             font-family: 'Share Tech Mono', monospace;
             font-size: 9px;
@@ -595,7 +592,7 @@
                 padding-right: 12px;
             }
 
-            .controls {
+            .viewer-actions {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
@@ -657,17 +654,24 @@
                     <video id="video" autoplay playsinline></video>
                 </div>
 
-                <div class="controls">
-                    <button id="connectBtn" class="btn" onclick="handleConnect()">Connect</button>
-                    <button id="disconnectBtn" class="btn btn-red" onclick="handleDisconnect()" disabled>Disconnect</button>
-                    <button id="fullscreenBtn" class="btn btn-gold" onclick="toggleFullscreen()">Fullscreen</button>
-                    <button id="screenshotBtn" class="btn" onclick="takeScreenshot()" disabled>Screenshot</button>
-                </div>
-
                 <div class="log-strip">SIGNAL // WHEP VIA /webcam/whep // MEDIA UDP 8555</div>
             </section>
 
             <aside class="side-panel">
+                <section class="info-panel panel">
+                    <div class="panel-head">
+                        <div class="panel-title">VIEWER CONTROL</div>
+                    </div>
+                    <div class="info-body">
+                        <div class="viewer-actions">
+                            <button id="connectBtn" class="btn" onclick="handleConnect()">Connect</button>
+                            <button id="disconnectBtn" class="btn btn-red" onclick="handleDisconnect()" disabled>Disconnect</button>
+                            <button id="fullscreenBtn" class="btn btn-gold" onclick="toggleFullscreen()">Fullscreen</button>
+                            <button id="screenshotBtn" class="btn" onclick="takeScreenshot()" disabled>Screenshot</button>
+                        </div>
+                    </div>
+                </section>
+
                 <section class="info-panel panel">
                     <div class="panel-head">
                         <div class="panel-title">CAMERA POWER</div>
