@@ -4,6 +4,9 @@
 const CAMERA_PATH = 'webcam';
 const CAMERA_RUN_ON_INIT = 'ffmpeg -hide_banner -loglevel error -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 30 -i /dev/video0 -an -c:v libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency -profile:v high -crf 17 -maxrate 25M -bufsize 25M -g 30 -bf 0 -f rtsp -rtsp_transport tcp rtsp://localhost:8322/webcam';
 
+let recorder = null;
+let recordedChunks = [];
+
 class WebRTCStream {
     constructor() {
         this.pc = null;
@@ -214,6 +217,10 @@ class WebRTCStream {
         this.connected = false;
         this.stopStatsCollection();
 
+        if (recorder && recorder.state !== 'inactive') {
+            recorder.stop();
+        }
+
         if (this.pc) {
             this.pc.close();
             this.pc = null;
@@ -244,6 +251,7 @@ class WebRTCStream {
         document.getElementById('connectBtn').disabled = isConnected;
         document.getElementById('disconnectBtn').disabled = !isConnected;
         document.getElementById('screenshotBtn').disabled = !isConnected;
+        document.getElementById('recordBtn').disabled = !isConnected;
     }
 
     showError(message) {
@@ -334,6 +342,72 @@ function takeScreenshot() {
     link.href = canvas.toDataURL('image/png');
     link.download = `webcam-${new Date().toISOString()}.png`;
     link.click();
+}
+
+function getSupportedRecordingType() {
+    const types = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm',
+    ];
+
+    return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+
+function toggleRecording() {
+    if (recorder && recorder.state === 'recording') {
+        recorder.stop();
+        return;
+    }
+
+    startRecording();
+}
+
+function startRecording() {
+    const video = document.getElementById('video');
+    const recordBtn = document.getElementById('recordBtn');
+
+    if (!video.srcObject) {
+        return;
+    }
+
+    if (!window.MediaRecorder) {
+        alert('Recording is not supported by this browser.');
+        return;
+    }
+
+    recordedChunks = [];
+
+    const mimeType = getSupportedRecordingType();
+    recorder = new MediaRecorder(video.srcObject, mimeType ? { mimeType } : undefined);
+
+    recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+        }
+    };
+
+    recorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = `webcam-recording-${new Date().toISOString()}.webm`;
+        link.click();
+
+        URL.revokeObjectURL(url);
+        recordBtn.textContent = 'Record';
+        recordBtn.classList.add('btn-gold');
+        recordBtn.classList.remove('btn-red');
+        recordedChunks = [];
+        recorder = null;
+    };
+
+    recorder.start(1000);
+    recordBtn.textContent = 'Stop Rec';
+    recordBtn.classList.remove('btn-gold');
+    recordBtn.classList.add('btn-red');
 }
 
 function copyStreamUrl() {
