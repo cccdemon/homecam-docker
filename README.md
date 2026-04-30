@@ -67,8 +67,8 @@ webcam-stream/
 ### Camera Settings (.env)
 ```bash
 CAMERA_SOURCE=/dev/video0         # V4L2 device path
-CAMERA_WIDTH=1280                 # Resolution width
-CAMERA_HEIGHT=720                 # Resolution height
+CAMERA_WIDTH=1920                 # Resolution width
+CAMERA_HEIGHT=1080                # Resolution height
 CAMERA_FPS=30                      # Frame rate
 CAMERA_FORMAT=MJPEG                # Input format (MJPEG or YUYV)
 ```
@@ -295,7 +295,7 @@ For secure remote access:
 | Metric | Value | Notes |
 |--------|-------|-------|
 | Codec | H.264 | Efficient, widely supported |
-| Resolution | 1280×720 | C920 native resolution |
+| Resolution | 1920×1080 | Full HD |
 | Frame Rate | 30 fps | Smooth motion |
 | Bitrate | 2500 kbps | ~2.5 Mbps (adjustable) |
 | Latency | <1s (WebRTC) | Peer-to-peer advantage |
