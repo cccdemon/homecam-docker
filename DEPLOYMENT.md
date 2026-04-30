@@ -141,8 +141,15 @@ curl -s http://localhost/health
 # Verify camera device exists
 ls -la /dev/video*
 
+# Verify the LXC cgroup allows V4L2 devices; /dev/video* is usually char major 81.
+stat -c '%t:%T %n' /dev/video*
+
 # Test v4l2
 v4l2-ctl -d /dev/video0 --all | head -10
+
+# If Docker logs show "Permission denied", add this on the Proxmox host and reboot CT 104:
+# pct set 104 -lxc2 "lxc.cgroup2.devices.allow = c 81:* rwm"
+# pct set 104 -lxc3 "lxc.mount.entry = /dev/video0 dev/video0 none bind,optional,create=file 0 0"
 
 # Check in MediaMTX logs
 docker-compose logs mediamtx | grep -i "webcam\|camera\|v4l2"

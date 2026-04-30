@@ -18,15 +18,16 @@ services:
     volumes:
       # Mount mediamtx configuration
       - ./mediamtx.yml:/mediamtx.yml:ro
-      # USB camera device pass-through
-      - /dev/video0:/dev/video0:rw
       # Optional: Recordings directory
       - ./recordings:/recordings
       # Optional: Logs
       - ./logs:/var/log/mediamtx
     devices:
       # Pass through USB device
-      - /dev/video0
+      - /dev/video0:/dev/video0:rwm
+    device_cgroup_rules:
+      # Allow V4L2 camera devices when Docker applies its own device cgroup.
+      - 'c 81:* rwm'
     cap_add:
       # Allow raw socket access for certain operations
       - NET_ADMIN

@@ -132,6 +132,8 @@ lsusb
 # Configure USB pass-through
 pct set 104 -lxc0 "lxc.cgroup2.devices.allow = c 189:* rwm"
 pct set 104 -lxc1 "lxc.mount.entry = /dev/bus/usb/001/002 dev/bus/usb/001/002 none bind,optional 0 0"
+pct set 104 -lxc2 "lxc.cgroup2.devices.allow = c 81:* rwm"
+pct set 104 -lxc3 "lxc.mount.entry = /dev/video0 dev/video0 none bind,optional,create=file 0 0"
 
 # Restart container
 pct reboot 104
