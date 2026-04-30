@@ -129,11 +129,12 @@ usermod -aG docker root
 lsusb
 # Output: Bus 001 Device 002: ID 046d:082d Logitech, Inc.
 
-# Configure USB pass-through
-pct set 104 -lxc0 "lxc.cgroup2.devices.allow = c 189:* rwm"
-pct set 104 -lxc1 "lxc.mount.entry = /dev/bus/usb/001/002 dev/bus/usb/001/002 none bind,optional 0 0"
-pct set 104 -lxc2 "lxc.cgroup2.devices.allow = c 81:* rwm"
-pct set 104 -lxc3 "lxc.mount.entry = /dev/video0 dev/video0 none bind,optional,create=file 0 0"
+# Configure USB and V4L2 pass-through by editing the CT config
+cp /etc/pve/lxc/104.conf /etc/pve/lxc/104.conf.bak
+grep -qxF 'lxc.cgroup2.devices.allow: c 189:* rwm' /etc/pve/lxc/104.conf || echo 'lxc.cgroup2.devices.allow: c 189:* rwm' >> /etc/pve/lxc/104.conf
+grep -qxF 'lxc.mount.entry: /dev/bus/usb/001/002 dev/bus/usb/001/002 none bind,optional,create=dir 0 0' /etc/pve/lxc/104.conf || echo 'lxc.mount.entry: /dev/bus/usb/001/002 dev/bus/usb/001/002 none bind,optional,create=dir 0 0' >> /etc/pve/lxc/104.conf
+grep -qxF 'lxc.cgroup2.devices.allow: c 81:* rwm' /etc/pve/lxc/104.conf || echo 'lxc.cgroup2.devices.allow: c 81:* rwm' >> /etc/pve/lxc/104.conf
+grep -qxF 'lxc.mount.entry: /dev/video0 dev/video0 none bind,optional,create=file 0 0' /etc/pve/lxc/104.conf || echo 'lxc.mount.entry: /dev/video0 dev/video0 none bind,optional,create=file 0 0' >> /etc/pve/lxc/104.conf
 
 # Restart container
 pct reboot 104
