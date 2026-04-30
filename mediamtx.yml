@@ -50,12 +50,10 @@ webrtcLocalUDPAddress: :8555
 webrtcLocalTCPAddress: ""
 
 # Performance tuning
-readBufferCount: 256
 readTimeout: 10s
 writeQueueSize: 256
 writeTimeout: 10s
 udpMaxPayloadSize: 1472
-externalAuthenticationURL: ""
 
 # Stream paths configuration
 paths:
