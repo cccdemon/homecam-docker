@@ -248,7 +248,7 @@ webrtc://stream.raumdock.org:8555/webcam
 
 ### HLS Fallback
 ```
-http://stream.raumdock.org:8889/webcam/index.m3u8
+http://stream.raumdock.org/hls/webcam/index.m3u8
 - Standard HTTP Live Streaming
 - Good for Safari/iOS
 - 3-5 second latency
