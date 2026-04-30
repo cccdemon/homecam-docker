@@ -3,65 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webcam Stream - Proxmox</title>
+    <title>Chaos Crew Webcam Stream</title>
     <style>
-        * {
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+        :root {
+            --cyan: #00d4ff;
+            --gold: #f0a500;
+            --red: #ff4444;
+            --green: #00ff88;
+            --bg: #04060a;
+            --bg2: #080e14;
+            --bg3: #0c1520;
+            --text: #c8dce8;
+            --dim: rgba(200, 220, 232, 0.42);
+            --dim2: rgba(200, 220, 232, 0.18);
+            --border: rgba(0, 212, 255, 0.1);
+            --border-hi: rgba(0, 212, 255, 0.28);
+        }
+
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow-x: hidden;
         }
 
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 1000px;
-            width: 100%;
+        button {
+            font: inherit;
+        }
+
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 212, 255, 0.006) 3px, rgba(0, 212, 255, 0.006) 4px);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .cc-nav {
+            height: 34px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .cc-nav-home {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--cyan);
+            text-decoration: none;
+            padding-right: 14px;
+            margin-right: 14px;
+            border-right: 1px solid var(--border);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .cc-nav-items {
+            display: flex;
+            align-items: stretch;
+            height: 100%;
+            flex: 1;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .cc-nav-items::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cc-nav-item {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            color: rgba(200, 220, 232, 0.38);
+            text-decoration: none;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+        }
+
+        .cc-nav-item.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+        }
+
+        .shell {
+            min-height: calc(100vh - 34px);
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+        }
+
+        .index-header {
+            background: var(--bg2);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+        }
+
+        .index-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), transparent);
+        }
+
+        .index-logo {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .logo-cc,
+        .logo-crew {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 26px;
+            letter-spacing: 4px;
+            white-space: nowrap;
+        }
+
+        .logo-cc {
+            color: var(--cyan);
+            text-shadow: 0 0 18px rgba(0, 212, 255, 0.3);
+        }
+
+        .logo-sep {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 20px;
+            color: rgba(0, 212, 255, 0.22);
+        }
+
+        .logo-crew {
+            color: var(--gold);
+            text-shadow: 0 0 18px rgba(240, 165, 0, 0.22);
+        }
+
+        .logo-sub {
+            margin-left: auto;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: var(--dim);
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        .health-bar {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 10px 28px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(4, 6, 10, 0.6);
+        }
+
+        .badge,
+        .health-svc {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+
+        .health-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+
+        .badge.on,
+        .health-svc.ok {
+            color: var(--green);
+            border-color: rgba(0, 255, 136, 0.3);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .badge.off,
+        .health-svc.loading {
+            color: var(--dim);
+            border-color: rgba(200, 220, 232, 0.1);
+        }
+
+        .health-svc.warn {
+            color: var(--gold);
+            border-color: rgba(240, 165, 0, 0.28);
+            background: rgba(240, 165, 0, 0.04);
+        }
+
+        .stream-main {
+            padding: 18px 22px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 14px;
+            min-height: 0;
+        }
+
+        .panel {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            position: relative;
             overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 9px;
+            height: 9px;
+            border-top: 1px solid rgba(0, 212, 255, 0.22);
+            border-right: 1px solid rgba(0, 212, 255, 0.22);
+            pointer-events: none;
         }
 
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-            font-weight: 600;
+        .panel-head {
+            height: 38px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg3);
         }
 
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
+        .panel-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: rgba(0, 212, 255, 0.55);
+            white-space: nowrap;
         }
 
-        .content {
-            padding: 30px;
+        .video-panel {
+            min-width: 0;
         }
 
-        .video-container {
+        .video-stage {
             position: relative;
             background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 25px;
             aspect-ratio: 16 / 9;
+            min-height: 280px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-stage::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(0, 212, 255, 0.08);
+            box-shadow: inset 0 0 32px rgba(0, 212, 255, 0.08);
+            pointer-events: none;
         }
 
         video {
@@ -71,314 +301,404 @@
             background: #000;
         }
 
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        @media (max-width: 600px) {
-            .controls {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            flex: 1;
-            min-width: 100px;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-danger {
-            background: #f56565;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #e53e3e;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(245, 101, 101, 0.4);
-        }
-
-        .btn-danger:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .status {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 7px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border: 1px solid;
+            white-space: nowrap;
         }
 
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status.connected {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
-        }
-
-        .status.connected .status-indicator {
-            background: #48bb78;
-        }
-
-        .status.connecting {
-            background: #bee3f8;
-            color: #2c5282;
-            border: 1px solid #90cdf4;
-        }
-
-        .status.connecting .status-indicator {
-            background: #4299e1;
+            background: currentColor;
             animation: pulse 1s infinite;
         }
 
-        .status.disconnected {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 1px solid #fc8181;
+        .status.connected {
+            color: var(--green);
+            border-color: rgba(0, 255, 136, 0.3);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .status.connecting {
+            color: var(--gold);
+            border-color: rgba(240, 165, 0, 0.3);
+            background: rgba(240, 165, 0, 0.04);
+        }
+
+        .status.disconnected,
+        .status.error {
+            color: var(--red);
+            border-color: rgba(255, 68, 68, 0.3);
+            background: rgba(255, 68, 68, 0.04);
         }
 
         .status.disconnected .status-indicator {
-            background: #f56565;
             animation: none;
         }
 
-        .status.error {
-            background: #feebc8;
-            color: #7c2d12;
-            border: 1px solid #fbd38d;
-        }
-
-        .status.error .status-indicator {
-            background: #ed8936;
-        }
-
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-            100% {
-                opacity: 1;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            padding: 10px;
+            border-top: 1px solid var(--border);
+            background: rgba(4, 6, 10, 0.55);
+        }
+
+        .btn {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            min-height: 34px;
+            padding: 6px 12px;
+            border: 1px solid;
+            cursor: pointer;
+            background: transparent;
+            text-transform: uppercase;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: var(--cyan);
+            border-color: rgba(0, 212, 255, 0.38);
+        }
+
+        .btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.28;
+            cursor: not-allowed;
+            background: transparent;
+        }
+
+        .btn-red {
+            color: var(--red);
+            border-color: rgba(255, 68, 68, 0.38);
+        }
+
+        .btn-red:hover {
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .btn-gold {
+            color: var(--gold);
+            border-color: rgba(240, 165, 0, 0.38);
+        }
+
+        .btn-gold:hover {
+            background: rgba(240, 165, 0, 0.1);
+        }
+
+        .side-panel {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .info-panel {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 20px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
         }
 
-        .info-panel h3 {
-            font-size: 14px;
-            color: #2d3748;
-            margin-bottom: 12px;
-            font-weight: 600;
+        .info-body {
+            padding: 9px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
         }
 
         .info-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.07);
             font-size: 13px;
-            color: #4a5568;
         }
 
         .info-item:last-child {
-            border-bottom: none;
+            border-bottom: 0;
         }
 
         .info-label {
-            font-weight: 600;
-            color: #2d3748;
+            color: var(--dim);
+            white-space: nowrap;
         }
 
         .info-value {
-            color: #667eea;
-            font-family: 'Monaco', 'Courier New', monospace;
+            color: var(--cyan);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            text-align: right;
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .stream-link {
-            background: #edf2f7;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 15px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 12px;
-            word-break: break-all;
-            color: #2d3748;
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            padding: 8px 0 0;
+        }
+
+        .stream-link span {
+            min-width: 0;
+            background: var(--bg);
+            border: 1px solid rgba(0, 212, 255, 0.12);
+            color: rgba(200, 220, 232, 0.62);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            padding: 7px 8px;
+            overflow-wrap: anywhere;
         }
 
         .copy-btn {
-            padding: 6px 12px !important;
-            font-size: 12px !important;
-            min-width: auto;
-            background: #667eea !important;
-            color: white !important;
-            flex: 0 0 auto;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            padding: 7px 10px;
+            border: 1px solid rgba(0, 212, 255, 0.32);
+            color: var(--cyan);
+            background: transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: rgba(0, 212, 255, 0.08);
         }
 
         .error-message {
-            background: #fed7d7;
-            color: #742a2a;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            border-left: 4px solid #f56565;
+            margin: 10px;
+            padding: 9px 10px;
+            border: 1px solid rgba(255, 68, 68, 0.32);
+            border-left: 2px solid var(--red);
+            background: rgba(255, 68, 68, 0.04);
+            color: var(--red);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #718096;
+        .log-strip {
+            padding: 10px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: rgba(200, 220, 232, 0.28);
+            letter-spacing: 1px;
         }
 
-        .spinner {
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 10px 22px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--bg2);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: rgba(200, 220, 232, 0.16);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.14);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.28);
+        }
+
+        @media (max-width: 920px) {
+            .stream-main {
+                grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                grid-row: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .index-header {
+                padding: 14px 16px;
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .logo-cc,
+            .logo-crew {
+                font-size: 20px;
+                letter-spacing: 3px;
+            }
+
+            .logo-sub {
+                margin-left: 0;
+            }
+
+            .health-bar,
+            .stream-main {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .controls {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .video-stage {
+                min-height: 210px;
+            }
+
+            footer {
+                flex-direction: column;
+                padding-left: 12px;
+                padding-right: 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎥 Webcam Stream</h1>
-            <p>Live HD Video Feed from Proxmox Server</p>
+    <div class="scanlines"></div>
+
+    <nav class="cc-nav">
+        <a class="cc-nav-home" href="/">CHAOS CREW</a>
+        <div class="cc-nav-items">
+            <a class="cc-nav-item active" href="/">WEBCAM</a>
+            <a class="cc-nav-item" href="/health">HEALTH</a>
+            <a class="cc-nav-item" href="/v3/paths/list">PATHS</a>
+        </div>
+    </nav>
+
+    <div class="shell">
+        <header class="index-header">
+            <div class="index-logo">
+                <span class="logo-cc">CC</span>
+                <span class="logo-sep">//</span>
+                <span class="logo-crew">WEBCAM</span>
+            </div>
+            <div class="logo-sub">PROXMOX LIVE CONTROL</div>
+        </header>
+
+        <div class="health-bar">
+            <div class="health-svc ok"><span class="health-dot"></span>MEDIAMTX</div>
+            <div class="health-svc ok"><span class="health-dot"></span>WEBRTC</div>
+            <div class="health-svc warn"><span class="health-dot"></span>FULLHD</div>
+            <div class="health-svc loading"><span class="health-dot"></span>HLS READY</div>
         </div>
 
-        <div class="content">
-            <div id="status" class="status connecting">
-                <div class="status-indicator"></div>
-                <span id="statusText">Connecting to camera...</span>
-            </div>
-
-            <div id="errorContainer"></div>
-
-            <div class="video-container" id="videoContainer">
-                <video id="video" autoplay playsinline></video>
-            </div>
-
-            <div class="controls">
-                <div class="button-group">
-                    <button id="connectBtn" class="btn-primary" onclick="handleConnect()">
-                        ▶ Connect
-                    </button>
-                    <button id="disconnectBtn" class="btn-danger" onclick="handleDisconnect()" disabled>
-                        ⏹ Disconnect
-                    </button>
-                </div>
-                <div class="button-group">
-                    <button id="fullscreenBtn" class="btn-primary" onclick="toggleFullscreen()">
-                        ⛶ Fullscreen
-                    </button>
-                    <button id="screenshotBtn" class="btn-primary" onclick="takeScreenshot()" disabled>
-                        📷 Screenshot
-                    </button>
-                </div>
-            </div>
-
-            <div class="info-panel">
-                <h3>Stream Information</h3>
-                <div class="info-item">
-                    <span class="info-label">Stream Status:</span>
-                    <span class="info-value" id="infoStatus">Disconnected</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Connection Type:</span>
-                    <span class="info-value" id="infoType">WebRTC</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Video Resolution:</span>
-                    <span class="info-value" id="infoResolution">1920x1080</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Frame Rate:</span>
-                    <span class="info-value" id="infoFramerate">30 fps</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Codec:</span>
-                    <span class="info-value" id="infoCodec">H.264</span>
+        <main class="stream-main">
+            <section class="panel video-panel">
+                <div class="panel-head">
+                    <div class="panel-title">LIVE FEED // CAMERA 01</div>
+                    <div id="status" class="status connecting">
+                        <div class="status-indicator"></div>
+                        <span id="statusText">CONNECTING</span>
+                    </div>
                 </div>
 
-                <div class="stream-link">
-                    <span id="streamUrl">webrtc://stream.raumdock.org:8555/webcam</span>
-                    <button class="copy-btn" onclick="copyStreamUrl()">Copy URL</button>
+                <div id="errorContainer"></div>
+
+                <div class="video-stage" id="videoContainer">
+                    <video id="video" autoplay playsinline></video>
                 </div>
 
-                <div class="stream-link">
-                    <span id="hlsUrl">http://stream.raumdock.org/hls/webcam/index.m3u8</span>
-                    <button class="copy-btn" onclick="copyHlsUrl()">Copy HLS</button>
+                <div class="controls">
+                    <button id="connectBtn" class="btn" onclick="handleConnect()">Connect</button>
+                    <button id="disconnectBtn" class="btn btn-red" onclick="handleDisconnect()" disabled>Disconnect</button>
+                    <button id="fullscreenBtn" class="btn btn-gold" onclick="toggleFullscreen()">Fullscreen</button>
+                    <button id="screenshotBtn" class="btn" onclick="takeScreenshot()" disabled>Screenshot</button>
                 </div>
-            </div>
-        </div>
+
+                <div class="log-strip">SIGNAL // WHEP VIA /webcam/whep // MEDIA UDP 8555</div>
+            </section>
+
+            <aside class="side-panel">
+                <section class="info-panel panel">
+                    <div class="panel-head">
+                        <div class="panel-title">STREAM TELEMETRY</div>
+                        <div class="badge on">ONLINE</div>
+                    </div>
+                    <div class="info-body">
+                        <div class="info-item">
+                            <span class="info-label">Stream Status</span>
+                            <span class="info-value" id="infoStatus">Disconnected</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Connection</span>
+                            <span class="info-value" id="infoType">WebRTC</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Resolution</span>
+                            <span class="info-value" id="infoResolution">1920x1080</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Frame Rate</span>
+                            <span class="info-value" id="infoFramerate">30 fps</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Codec</span>
+                            <span class="info-value" id="infoCodec">H.264</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-panel panel">
+                    <div class="panel-head">
+                        <div class="panel-title">ENDPOINTS</div>
+                    </div>
+                    <div class="info-body">
+                        <div class="stream-link">
+                            <span id="streamUrl">webrtc://stream.raumdock.org:8555/webcam</span>
+                            <button class="copy-btn" onclick="copyStreamUrl()">COPY</button>
+                        </div>
+                        <div class="stream-link">
+                            <span id="hlsUrl">http://stream.raumdock.org/hls/webcam/index.m3u8</span>
+                            <button class="copy-btn" onclick="copyHlsUrl()">COPY</button>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+        <footer>
+            <span>CHAOS CREW // CAMERA NODE</span>
+            <span>MEDIAMTX // FULLHD // LOW LATENCY</span>
+        </footer>
     </div>
 
-    <script src="stream.js?v=20260430-1"></script>
+    <script src="stream.js?v=20260430-2"></script>
 </body>
 </html>
