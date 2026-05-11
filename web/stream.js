@@ -2,10 +2,10 @@
 // Connects to MediaMTX WebRTC server and displays live video feed
 
 const CAMERA_PATH = 'webcam';
-const CAMERA_RUN_ON_INIT = 'ffmpeg -hide_banner -loglevel error -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 30 -i /dev/video0 -an -c:v libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency -profile:v high -crf 17 -maxrate 25M -bufsize 25M -g 30 -bf 0 -f rtsp -rtsp_transport tcp rtsp://localhost:8322/webcam';
 
 let recorder = null;
 let recordedChunks = [];
+let cameraRunOnInitCommand = '';
 
 class WebRTCStream {
     constructor() {
@@ -100,7 +100,8 @@ class WebRTCStream {
                 console.log('ICE connection state:', this.pc.iceConnectionState);
             };
 
-            // Add transceiver for receiving video
+            // Add transceivers for receiving media
+            this.pc.addTransceiver('audio', { direction: 'recvonly' });
             this.pc.addTransceiver('video', { direction: 'recvonly' });
 
             // Create and send offer
@@ -424,6 +425,20 @@ function copyHlsUrl() {
     });
 }
 
+function updateEndpointUrls() {
+    const origin = window.location.origin;
+    const streamUrl = document.getElementById('streamUrl');
+    const hlsUrl = document.getElementById('hlsUrl');
+
+    if (streamUrl) {
+        streamUrl.textContent = `${origin}/${CAMERA_PATH}/whep`;
+    }
+
+    if (hlsUrl) {
+        hlsUrl.textContent = `${origin}/${CAMERA_PATH}/index.m3u8`;
+    }
+}
+
 function setCameraControlsDisabled(disabled) {
     const onBtn = document.getElementById('cameraOnBtn');
     const offBtn = document.getElementById('cameraOffBtn');
@@ -489,6 +504,9 @@ async function refreshCameraPowerState() {
         }
 
         const config = await response.json();
+        if (config.runOnInit) {
+            cameraRunOnInitCommand = config.runOnInit;
+        }
         updateCameraPowerState(config.runOnInit ? 'on' : 'off', config.runOnInit ? 'ON' : 'OFF');
     } catch (error) {
         console.error('Camera state check failed:', error);
@@ -501,8 +519,16 @@ async function handleCameraOn() {
     updateCameraPowerState('unknown', 'STARTING');
 
     try {
+        if (!cameraRunOnInitCommand) {
+            await refreshCameraPowerState();
+        }
+
+        if (!cameraRunOnInitCommand) {
+            throw new Error('No camera start command is available from MediaMTX config');
+        }
+
         await patchCameraPath({
-            runOnInit: CAMERA_RUN_ON_INIT,
+            runOnInit: cameraRunOnInitCommand,
             runOnInitRestart: true,
         });
         updateCameraPowerState('on', 'ON');
@@ -525,6 +551,7 @@ async function handleCameraOff() {
     }
 
     try {
+        await refreshCameraPowerState();
         await patchCameraPath({
             runOnInit: '',
             runOnInitRestart: false,
@@ -552,6 +579,7 @@ function clearControlError() {
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
     console.log('Page loaded. Ready to connect to WebRTC stream.');
+    updateEndpointUrls();
     refreshCameraPowerState();
 });
 

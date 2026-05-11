@@ -490,6 +490,23 @@
             gap: 8px;
         }
 
+        .audio-control {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 8px;
+            padding-top: 2px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--dim);
+        }
+
+        .audio-control input[type="range"] {
+            width: 100%;
+            accent-color: var(--cyan);
+        }
+
         .copy-btn {
             font-family: 'Share Tech Mono', monospace;
             font-size: 9px;
@@ -651,7 +668,7 @@
                 <div id="errorContainer"></div>
 
                 <div class="video-stage" id="videoContainer">
-                    <video id="video" autoplay playsinline></video>
+                    <video id="video" autoplay playsinline controls></video>
                 </div>
 
                 <div class="log-strip">SIGNAL // WHEP VIA /webcam/whep // MEDIA UDP 8555</div>
@@ -669,6 +686,11 @@
                             <button id="fullscreenBtn" class="btn btn-gold" onclick="toggleFullscreen()">Fullscreen</button>
                             <button id="screenshotBtn" class="btn" onclick="takeScreenshot()" disabled>Screenshot</button>
                             <button id="recordBtn" class="btn btn-gold" onclick="toggleRecording()" disabled>Record</button>
+                        </div>
+                        <div class="audio-control">
+                            <span>VOL</span>
+                            <input id="volumeSlider" type="range" min="0" max="100" value="100" oninput="document.getElementById('video').volume = this.value / 100">
+                            <button class="copy-btn" onclick="document.getElementById('video').muted = !document.getElementById('video').muted">MUTE</button>
                         </div>
                     </div>
                 </section>
@@ -725,11 +747,11 @@
                     </div>
                     <div class="info-body">
                         <div class="stream-link">
-                            <span id="streamUrl">webrtc://stream.raumdock.org:8555/webcam</span>
+                            <span id="streamUrl">/webcam/whep</span>
                             <button class="copy-btn" onclick="copyStreamUrl()">COPY</button>
                         </div>
                         <div class="stream-link">
-                            <span id="hlsUrl">http://stream.raumdock.org/hls/webcam/index.m3u8</span>
+                            <span id="hlsUrl">/webcam/index.m3u8</span>
                             <button class="copy-btn" onclick="copyHlsUrl()">COPY</button>
                         </div>
                     </div>
@@ -743,6 +765,6 @@
         </footer>
     </div>
 
-    <script src="stream.js?v=20260430-4"></script>
+    <script src="stream.js?v=20260511-1"></script>
 </body>
 </html>
