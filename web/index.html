@@ -507,6 +507,49 @@
             accent-color: var(--cyan);
         }
 
+        .camera-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .camera-control-row {
+            display: grid;
+            grid-template-columns: 96px minmax(0, 1fr) 42px;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: var(--dim);
+        }
+
+        .camera-control-row input[type="range"] {
+            width: 100%;
+            accent-color: var(--gold);
+        }
+
+        .camera-control-row input[type="checkbox"] {
+            justify-self: start;
+            accent-color: var(--gold);
+        }
+
+        .camera-control-row select {
+            min-width: 0;
+            width: 100%;
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid rgba(0, 212, 255, 0.22);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            padding: 5px 6px;
+        }
+
+        .camera-control-value {
+            color: var(--cyan);
+            text-align: right;
+        }
+
         .copy-btn {
             font-family: 'Share Tech Mono', monospace;
             font-size: 9px;
@@ -710,6 +753,18 @@
 
                 <section class="info-panel panel">
                     <div class="panel-head">
+                        <div class="panel-title">CAMERA CONTROL</div>
+                        <button class="copy-btn" onclick="loadCameraControls()">REFRESH</button>
+                    </div>
+                    <div class="info-body">
+                        <div id="cameraControls" class="camera-controls">
+                            <div class="info-value">Loading</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-panel panel">
+                    <div class="panel-head">
                         <div class="panel-title">STREAM TELEMETRY</div>
                         <div class="badge on">ONLINE</div>
                     </div>
@@ -765,6 +820,6 @@
         </footer>
     </div>
 
-    <script src="stream.js?v=20260511-1"></script>
+    <script src="stream.js?v=20260511-2"></script>
 </body>
 </html>

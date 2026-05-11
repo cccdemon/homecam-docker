@@ -6,6 +6,50 @@ const CAMERA_PATH = 'webcam';
 let recorder = null;
 let recordedChunks = [];
 let cameraRunOnInitCommand = '';
+let cameraControlsByName = new Map();
+
+const CONTROL_LABELS = {
+    brightness: 'Brightness',
+    contrast: 'Contrast',
+    saturation: 'Saturation',
+    hue: 'Hue',
+    sharpness: 'Sharpness',
+    gamma: 'Gamma',
+    gain: 'Gain',
+    backlight_compensation: 'Backlight',
+    power_line_frequency: 'Power Hz',
+    white_balance_temperature_auto: 'WB Auto',
+    white_balance_temperature: 'WB Temp',
+    auto_exposure: 'Exposure',
+    exposure_auto: 'Exposure',
+    exposure_dynamic_framerate: 'Exp FPS',
+    exposure_time_absolute: 'Exp Time',
+    focus_automatic_continuous: 'Focus Auto',
+    focus_auto: 'Focus Auto',
+    focus_absolute: 'Focus',
+    zoom_absolute: 'Zoom',
+    pan_absolute: 'Pan',
+    tilt_absolute: 'Tilt',
+};
+
+const PREFERRED_CONTROLS = [
+    'brightness',
+    'contrast',
+    'saturation',
+    'sharpness',
+    'gain',
+    'backlight_compensation',
+    'power_line_frequency',
+    'white_balance_temperature_auto',
+    'white_balance_temperature',
+    'auto_exposure',
+    'exposure_auto',
+    'exposure_time_absolute',
+    'focus_automatic_continuous',
+    'focus_auto',
+    'focus_absolute',
+    'zoom_absolute',
+];
 
 class WebRTCStream {
     constructor() {
@@ -439,6 +483,130 @@ function updateEndpointUrls() {
     }
 }
 
+function formatControlName(name) {
+    return CONTROL_LABELS[name] || name.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function isControlWritable(control) {
+    return !String(control.flags || '').includes('inactive') && control.value !== null && control.value !== undefined;
+}
+
+function sortControls(controls) {
+    return controls
+        .filter(control => CONTROL_LABELS[control.name] && isControlWritable(control))
+        .sort((a, b) => {
+            const ai = PREFERRED_CONTROLS.indexOf(a.name);
+            const bi = PREFERRED_CONTROLS.indexOf(b.name);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        });
+}
+
+function renderCameraControls(controls) {
+    const container = document.getElementById('cameraControls');
+    if (!container) return;
+
+    const visibleControls = sortControls(controls);
+    cameraControlsByName = new Map(visibleControls.map(control => [control.name, control]));
+
+    if (!visibleControls.length) {
+        container.innerHTML = '<div class="info-value">No writable controls</div>';
+        return;
+    }
+
+    container.innerHTML = visibleControls.map(control => {
+        const value = Number(control.value);
+        const min = Number.isFinite(Number(control.min)) ? Number(control.min) : 0;
+        const max = Number.isFinite(Number(control.max)) ? Number(control.max) : 1;
+        const step = Number.isFinite(Number(control.step)) && Number(control.step) > 0 ? Number(control.step) : 1;
+        const label = formatControlName(control.name);
+
+        if (control.type === 'bool') {
+            return `
+                <label class="camera-control-row">
+                    <span>${label}</span>
+                    <input type="checkbox" ${value ? 'checked' : ''} onchange="setCameraControl('${control.name}', this.checked ? 1 : 0)">
+                    <span class="camera-control-value">${value ? 'ON' : 'OFF'}</span>
+                </label>
+            `;
+        }
+
+        if (Array.isArray(control.options) && control.options.length) {
+            const options = control.options.map(option => {
+                const selected = Number(option.value) === value ? 'selected' : '';
+                return `<option value="${option.value}" ${selected}>${option.label}</option>`;
+            }).join('');
+
+            return `
+                <label class="camera-control-row">
+                    <span>${label}</span>
+                    <select onchange="setCameraControl('${control.name}', Number(this.value))">${options}</select>
+                    <span class="camera-control-value">${value}</span>
+                </label>
+            `;
+        }
+
+        return `
+            <label class="camera-control-row">
+                <span>${label}</span>
+                <input type="range" min="${min}" max="${max}" step="${step}" value="${value}" oninput="previewCameraControlValue('${control.name}', this.value)" onchange="setCameraControl('${control.name}', Number(this.value))">
+                <span id="ctrlValue-${control.name}" class="camera-control-value">${value}</span>
+            </label>
+        `;
+    }).join('');
+}
+
+function previewCameraControlValue(name, value) {
+    const valueEl = document.getElementById(`ctrlValue-${name}`);
+    if (valueEl) valueEl.textContent = value;
+}
+
+async function loadCameraControls() {
+    const container = document.getElementById('cameraControls');
+    if (container) {
+        container.innerHTML = '<div class="info-value">Loading</div>';
+    }
+
+    try {
+        const response = await fetch('/api/camera/controls', { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`Camera API ${response.status}`);
+        }
+
+        const payload = await response.json();
+        renderCameraControls(payload.controls || []);
+    } catch (error) {
+        console.error('Camera controls failed:', error);
+        if (container) {
+            container.innerHTML = '<div class="error-message">Camera controls unavailable</div>';
+        }
+    }
+}
+
+async function setCameraControl(name, value) {
+    try {
+        const response = await fetch('/api/camera/controls', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, value }),
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `Camera API ${response.status}`);
+        }
+
+        const payload = await response.json();
+        renderCameraControls(payload.controls || []);
+        clearControlError();
+    } catch (error) {
+        console.error('Camera control update failed:', error);
+        showControlError(`Camera control failed: ${error.message}`);
+        loadCameraControls();
+    }
+}
+
 function setCameraControlsDisabled(disabled) {
     const onBtn = document.getElementById('cameraOnBtn');
     const offBtn = document.getElementById('cameraOffBtn');
@@ -581,6 +749,7 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('Page loaded. Ready to connect to WebRTC stream.');
     updateEndpointUrls();
     refreshCameraPowerState();
+    loadCameraControls();
 });
 
 // Auto-connect on page load (optional)
