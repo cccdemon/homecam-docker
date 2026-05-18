@@ -60,6 +60,7 @@ class WebRTCStream {
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 2000;
         this.statsInterval = null;
+        this.remoteStream = null;
 
         // Configuration
         this.config = {
@@ -112,10 +113,11 @@ class WebRTCStream {
                 }
             };
 
-            // Handle remote track
+            // Handle remote tracks. Audio and video can arrive as separate ontrack
+            // events, so keep one stable MediaStream instead of replacing srcObject.
             this.pc.ontrack = (event) => {
-                console.log('Remote track received:', event.track);
-                this.videoElement.srcObject = event.streams[0];
+                console.log('Remote track received:', event.track.kind, event.track);
+                this.addRemoteTrack(event.track);
             };
 
             // Handle connection state changes
@@ -165,6 +167,45 @@ class WebRTCStream {
             this.showError(`Connection failed: ${error.message}`);
             this.handleConnectionError();
         }
+    }
+
+    addRemoteTrack(track) {
+        if (!this.remoteStream) {
+            this.remoteStream = new MediaStream();
+            this.videoElement.srcObject = this.remoteStream;
+        }
+
+        const existing = this.remoteStream.getTracks().find(remoteTrack => remoteTrack.id === track.id);
+        if (!existing) {
+            this.remoteStream.addTrack(track);
+        }
+
+        track.addEventListener('ended', () => {
+            if (this.remoteStream) {
+                this.remoteStream.removeTrack(track);
+            }
+        }, { once: true });
+
+        this.updateTrackInfo();
+        this.ensurePlayback();
+    }
+
+    async ensurePlayback() {
+        try {
+            this.videoElement.muted = false;
+            this.videoElement.volume = Number(document.getElementById('volumeSlider')?.value || 100) / 100;
+            await this.videoElement.play();
+        } catch (error) {
+            console.warn('Playback did not start automatically:', error);
+        }
+    }
+
+    updateTrackInfo() {
+        if (!this.remoteStream) return;
+
+        const audioTracks = this.remoteStream.getAudioTracks().length;
+        const videoTracks = this.remoteStream.getVideoTracks().length;
+        console.log(`Remote stream tracks: video=${videoTracks}, audio=${audioTracks}`);
     }
 
     waitForIceGathering() {
@@ -271,8 +312,12 @@ class WebRTCStream {
             this.pc = null;
         }
 
+        if (this.remoteStream) {
+            this.remoteStream.getTracks().forEach(track => track.stop());
+            this.remoteStream = null;
+        }
+
         if (this.videoElement.srcObject) {
-            this.videoElement.srcObject.getTracks().forEach(track => track.stop());
             this.videoElement.srcObject = null;
         }
 
@@ -359,6 +404,33 @@ function handleConnect() {
 function handleDisconnect() {
     if (streamInstance) {
         streamInstance.disconnect();
+    }
+}
+
+function resumeStreamAudio() {
+    const video = document.getElementById('video');
+    if (!video) return;
+
+    video.muted = false;
+    video.volume = Number(document.getElementById('volumeSlider')?.value || 100) / 100;
+    video.play().catch(error => {
+        console.warn('Audio resume failed:', error);
+    });
+
+    const muteBtn = document.getElementById('muteBtn');
+    if (muteBtn) muteBtn.textContent = 'MUTE';
+}
+
+function toggleStreamMute() {
+    const video = document.getElementById('video');
+    const muteBtn = document.getElementById('muteBtn');
+    if (!video) return;
+
+    video.muted = !video.muted;
+    if (muteBtn) muteBtn.textContent = video.muted ? 'UNMUTE' : 'MUTE';
+
+    if (!video.muted) {
+        resumeStreamAudio();
     }
 }
 

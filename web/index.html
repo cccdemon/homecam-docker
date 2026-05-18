@@ -733,7 +733,8 @@
                         <div class="audio-control">
                             <span>VOL</span>
                             <input id="volumeSlider" type="range" min="0" max="100" value="100" oninput="document.getElementById('video').volume = this.value / 100">
-                            <button class="copy-btn" onclick="document.getElementById('video').muted = !document.getElementById('video').muted">MUTE</button>
+                            <button id="muteBtn" class="copy-btn" onclick="toggleStreamMute()">MUTE</button>
+                            <button class="copy-btn" onclick="resumeStreamAudio()">AUDIO</button>
                         </div>
                     </div>
                 </section>

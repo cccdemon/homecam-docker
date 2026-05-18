@@ -2,6 +2,10 @@
 .env
 .env.local
 .env.*.local
+.runtime.env
+
+# Generated at runtime by start-streaming.sh prepare
+mediamtx.pi.yml
 
 # Logs
 logs/
